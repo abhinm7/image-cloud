@@ -1,19 +1,34 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const dotenv = require("dotenv");
-const cors = require("cors");
-dotenv.config();
+const express = require('express');
+const cors = require('cors');
+require('dotenv').config();
+
+const connectDB = require('./config/db');
+// const configureCloudinary = require('./config/cloudinary');
+
+const authRoutes = require('./routes/authRoutes');
+// const folderRoutes = require('./routes/folders');
+// const imageRoutes = require('./routes/images');
 
 const app = express();
-app.use(cors());
-app.use(express.json());    
+const PORT = process.env.PORT || 5001;
 
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => {
-        console.log("db connected");
-    })
-    .catch((err) => console.error("db connection error:", err));
+connectDB();
+// configureCloudinary();
 
-app.listen(process.env.PORT, () => {
-    console.log(`Server running on port ${process.env.PORT}`);
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+}));
+app.use(express.json());
+
+app.use('/api/auth', authRoutes);
+// app.use('/api/folders', folderRoutes);
+// app.use('/api/images', imageRoutes);
+
+app.get('/', (req, res) => {
+    res.status(200).json({ message: 'Image Cloud Server is running!' });
+});
+
+app.listen(PORT, () => {
+    console.log(`Server is listening on port ${PORT}`);
 });
