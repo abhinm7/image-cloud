@@ -6,8 +6,8 @@ const connectDB = require('./config/db');
 const configureCloudinary = require('./config/cloudinary');
 
 const authRoutes = require('./routes/authRoutes');
-// const folderRoutes = require('./routes/folders');
-// const imageRoutes = require('./routes/images');
+const folderRoutes = require('./routes/folderRoute');
+const imageRoutes = require('./routes/imageRoute');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -22,8 +22,8 @@ app.use(cors({
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
-// app.use('/api/folders', folderRoutes);
-// app.use('/api/images', imageRoutes);
+app.use('/api/folders', folderRoutes);
+app.use('/api/images', imageRoutes);
 
 app.get('/', (req, res) => {
     res.status(200).json({ message: 'Image Cloud Server is running!' });
