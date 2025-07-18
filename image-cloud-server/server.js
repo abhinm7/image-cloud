@@ -3,7 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const connectDB = require('./config/db');
-// const configureCloudinary = require('./config/cloudinary');
+const configureCloudinary = require('./config/cloudinary');
 
 const authRoutes = require('./routes/authRoutes');
 // const folderRoutes = require('./routes/folders');
@@ -13,7 +13,7 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 connectDB();
-// configureCloudinary();
+configureCloudinary();
 
 app.use(cors({
     origin: '*',
