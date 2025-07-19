@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getFolderContents, createFolder, uploadImage } from '../services/api';
 import { removeToken } from '../utils/auth';
 import FolderCard from '../components/FolderCard';
-import ImageCard from '../components/ImageCard'; // We'll create this next
+import ImageCard from '../components/ImageCard';
 
 const FolderViewPage = () => {
     const { folderId } = useParams();
@@ -13,12 +13,11 @@ const FolderViewPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     
-    // State for creating new folder
     const [newFolderName, setNewFolderName] = useState('');
     
-    // State for uploading image
     const [newImageName, setNewImageName] = useState('');
     const [imageFile, setImageFile] = useState(null);
+    const [isUploading, setIsUploading] = useState(false);
 
 
     const fetchContents = async () => {
@@ -49,18 +48,20 @@ const FolderViewPage = () => {
         try {
             await createFolder({ name: newFolderName, parentId: folderId });
             setNewFolderName('');
-            fetchContents(); // Refresh contents
+            fetchContents();
         } catch (err) {
-            setError('Failed to create folder.');
+            setError(err.response?.data?.message || 'Failed to create folder.');
         }
     };
 
     const handleImageUpload = async (e) => {
         e.preventDefault();
+        setError('');
         if (!newImageName.trim() || !imageFile) {
             setError('Image name and file are required.');
             return;
         }
+        setIsUploading(true);
         const formData = new FormData();
         formData.append('name', newImageName);
         formData.append('folderId', folderId);
@@ -70,10 +71,21 @@ const FolderViewPage = () => {
             await uploadImage(formData);
             setNewImageName('');
             setImageFile(null);
-            e.target.reset(); // Reset the form
-            fetchContents(); // Refresh contents
+            e.target.reset();
+            fetchContents();
         } catch (err) {
-            setError('Failed to upload image.');
+            let errorMessage = 'An unknown error occurred during upload.';
+            if (err.response) {
+                errorMessage = err.response.data?.message || JSON.stringify(err.response.data) || 'Server returned an error.';
+            } else if (err.request) {
+                errorMessage = 'Could not connect to the server. Is the backend running? Please check the backend console for crash logs.';
+            } else {
+                errorMessage = err.message;
+            }
+            setError(errorMessage);
+            console.error(err);
+        } finally {
+            setIsUploading(false);
         }
     };
 
@@ -103,7 +115,6 @@ const FolderViewPage = () => {
                 <div className="px-4 py-6 sm:px-0">
                     <h1 className="text-2xl font-semibold text-gray-900">Folder Contents</h1>
                     
-                    {/* --- Action Forms --- */}
                     <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-8 p-4 border rounded-lg bg-white">
                         <form onSubmit={handleCreateFolder} className="space-y-2">
                             <h3 className="font-semibold">Create New Folder</h3>
@@ -117,12 +128,14 @@ const FolderViewPage = () => {
                             <div className="flex items-center space-x-2">
                                 <input type="text" value={newImageName} onChange={(e) => setNewImageName(e.target.value)} placeholder="Image name" className="w-full px-3 py-2 border border-gray-300 rounded-md"/>
                                 <input type="file" onChange={(e) => setImageFile(e.target.files[0])} className="w-full"/>
-                                <button type="submit" className="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700">Upload</button>
+                                <button type="submit" disabled={isUploading} className="px-4 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:bg-blue-400">
+                                    {isUploading ? 'Uploading...' : 'Upload'}
+                                </button>
                             </div>
                         </form>
                     </div>
 
-                    {error && <p className="mt-4 text-red-500">{error}</p>}
+                    {error && <div className="mt-4 p-3 text-sm text-red-700 bg-red-100 border border-red-400 rounded-md">{error}</div>}
 
                     {loading ? (
                         <p className="mt-8 text-center">Loading...</p>

@@ -4,7 +4,6 @@ const Folder = require('../models/Folder');
 exports.uploadImage = async (req, res) => {
     const { name, folderId } = req.body;
     const owner = req.user.id;
-
     if (!name || !folderId || !req.file) {
         return res.status(400).json({ message: 'Name, folderId, and image file are required' });
     }
@@ -17,8 +16,8 @@ exports.uploadImage = async (req, res) => {
 
         const newImage = new Image({
             name,
-            imageUrl: req.file.path, // The URL from Cloudinary is now in req.file.path
-            cloudinaryId: req.file.filename, // The public_id from Cloudinary
+            imageUrl: req.file.path,
+            cloudinaryId: req.file.filename,
             owner,
             folder: folderId,
         });
@@ -26,7 +25,7 @@ exports.uploadImage = async (req, res) => {
         const savedImage = await newImage.save();
         res.status(201).json(savedImage);
     } catch (error) {
-        console.error(error.message);
+        console.error("error",error.message);
         res.status(500).send('Server Error');
     }
 };
